@@ -2753,22 +2753,57 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(186));
-const wait_1 = __nccwpck_require__(259);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
     try {
-        const ms = core.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        core.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        core.debug(new Date().toTimeString());
-        await (0, wait_1.wait)(parseInt(ms, 10));
-        core.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        core.setOutput('time', new Date().toTimeString());
+        const pillarCode = core.getInput('pillarCode');
+        if (pillarCode === '') {
+            throw new Error(`Input pillarCode is not set`);
+        }
+        const env = core.getInput('environmentName');
+        if (env === '') {
+            throw new Error(`Input environmentName is not set`);
+        }
+        const clientIdInput = core.getInput('clientId');
+        if (clientIdInput !== '') {
+            console.log(`Client Id: ${clientIdInput}`);
+            core.setOutput('clientId', clientIdInput);
+            return;
+        }
+        else {
+            const clientIdKey = `${pillarCode}_AZURE_CLIENT_ID_${env}`.toUpperCase();
+            const clientId = process.env[clientIdKey];
+            console.log(`Client Id: ${clientId}`);
+            core.setOutput('clientId', clientId);
+        }
+        const subscriptionIdInput = core.getInput('subscriptionId');
+        if (subscriptionIdInput !== '') {
+            console.log(`Subscription Id: ${subscriptionIdInput}`);
+            core.setOutput('subscriptionId', subscriptionIdInput);
+        }
+        else {
+            const subscriptionIdKey = `${pillarCode}_AZURE_SUBSCRIPTION_ID_${env}`.toUpperCase();
+            const subscriptionId = process.env[subscriptionIdKey];
+            console.log(`Subscription Id: ${subscriptionId}`);
+            core.setOutput('subscriptionId', subscriptionId);
+        }
+        const tenantIdInput = core.getInput('tenantId');
+        if (tenantIdInput !== '') {
+            console.log(`Tenant Id: ${tenantIdInput}`);
+            core.setOutput('tenantId', tenantIdInput);
+        }
+        else {
+            const tenantIdKey = `${pillarCode}_AZURE_TENANT_ID_${env}`.toUpperCase();
+            const tenantId = process.env[tenantIdKey];
+            console.log(`Tenant Id: ${tenantId}`);
+            core.setOutput('tenantId', tenantId);
+        }
+        const pulumiStateSubscriptionId = process.env.PULUMI_STATE_AZURE_SUBSCRIPTION_ID;
+        console.log(`Pulumi State Subscription Id: ${pulumiStateSubscriptionId}`);
+        core.setOutput('pulumiStateSubscriptionId', pulumiStateSubscriptionId);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
@@ -2777,31 +2812,6 @@ async function run() {
     }
 }
 exports.run = run;
-
-
-/***/ }),
-
-/***/ 259:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-/**
- * Wait for a number of milliseconds.
- * @param milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise(resolve => {
-        if (isNaN(milliseconds)) {
-            throw new Error('milliseconds not a number');
-        }
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
-}
-exports.wait = wait;
 
 
 /***/ }),
