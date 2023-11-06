@@ -6,7 +6,7 @@ author: 'Your name or organization here'
 inputs:
   pillarCode:
     description: 'Pillar Code'
-    required: true
+    required: false
   environmentName:
     description: 'Environment Name'
     required: true

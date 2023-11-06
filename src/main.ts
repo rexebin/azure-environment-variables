@@ -7,9 +7,6 @@ import * as core from '@actions/core';
 export async function run(): Promise<void> {
   try {
     const pillarCode = core.getInput('pillarCode');
-    if (pillarCode === '') {
-      throw new Error(`Input pillarCode is not set`);
-    }
     const env = core.getInput('environmentName');
 
     if (env === '') {
@@ -17,10 +14,31 @@ export async function run(): Promise<void> {
     }
 
     const clientIdInput = core.getInput('clientId');
+    const subscriptionIdInput = core.getInput('subscriptionId');
+    const tenantIdInput = core.getInput('tenantId');
+
+    if (
+      pillarCode === '' &&
+      (clientIdInput === '' ||
+        subscriptionIdInput === '' ||
+        tenantIdInput === '')
+    ) {
+      throw new Error(
+        `Either pillarCode or clientId, subscriptionId, and tenantId must be provided`
+      );
+    }
+
+    const pulumiStateSubscriptionId =
+      process.env.PULUMI_STATE_AZURE_SUBSCRIPTION_ID;
+    if (!pulumiStateSubscriptionId) {
+      throw new Error(`Pulumi State Subscription Id is not set in the runner`);
+    }
+    console.log(`Pulumi State Subscription Id: ${pulumiStateSubscriptionId}`);
+    core.setOutput('pulumiStateSubscriptionId', pulumiStateSubscriptionId);
+
     if (clientIdInput !== '') {
       console.log(`Client Id: ${clientIdInput}`);
       core.setOutput('clientId', clientIdInput);
-      return;
     } else {
       const clientIdKey = `${pillarCode}_AZURE_CLIENT_ID_${env}`.toUpperCase();
       const clientId = process.env[clientIdKey];
@@ -28,7 +46,6 @@ export async function run(): Promise<void> {
       core.setOutput('clientId', clientId);
     }
 
-    const subscriptionIdInput = core.getInput('subscriptionId');
     if (subscriptionIdInput !== '') {
       console.log(`Subscription Id: ${subscriptionIdInput}`);
       core.setOutput('subscriptionId', subscriptionIdInput);
@@ -40,22 +57,14 @@ export async function run(): Promise<void> {
       core.setOutput('subscriptionId', subscriptionId);
     }
 
-    const tenantIdInput = core.getInput('tenantId');
     if (tenantIdInput !== '') {
       console.log(`Tenant Id: ${tenantIdInput}`);
       core.setOutput('tenantId', tenantIdInput);
     } else {
-      const tenantIdKey = `${pillarCode}_AZURE_TENANT_ID_${env}`.toUpperCase();
-      const tenantId = process.env[tenantIdKey];
+      const tenantId = process.env.AZURE_TENANT_ID;
       console.log(`Tenant Id: ${tenantId}`);
       core.setOutput('tenantId', tenantId);
     }
-
-    const pulumiStateSubscriptionId =
-      process.env.PULUMI_STATE_AZURE_SUBSCRIPTION_ID;
-    console.log(`Pulumi State Subscription Id: ${pulumiStateSubscriptionId}`);
-
-    core.setOutput('pulumiStateSubscriptionId', pulumiStateSubscriptionId);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);
