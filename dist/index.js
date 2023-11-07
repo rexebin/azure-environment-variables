@@ -2753,16 +2753,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(186));
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
 async function run() {
     try {
         const pillarCode = core.getInput('pillarCode');
         const env = core.getInput('environmentName');
-        if (env === '') {
-            throw new Error(`Input environmentName is not set`);
+        if (pillarCode !== '' && env === '') {
+            throw new Error(`Input environmentName must be set when pillarCode is set`);
+        }
+        if (pillarCode === '' && env !== '') {
+            throw new Error(`Input pillarCode must be set when environmentName is set`);
         }
         const clientIdInput = core.getInput('clientId');
         const subscriptionIdInput = core.getInput('subscriptionId');

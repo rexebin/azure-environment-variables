@@ -1,18 +1,19 @@
 import * as core from '@actions/core';
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
 export async function run(): Promise<void> {
   try {
     const pillarCode = core.getInput('pillarCode');
     const env = core.getInput('environmentName');
-
-    if (env === '') {
-      throw new Error(`Input environmentName is not set`);
+    if (pillarCode !== '' && env === '') {
+      throw new Error(
+        `Input environmentName must be set when pillarCode is set`
+      );
     }
-
+    if (pillarCode === '' && env !== '') {
+      throw new Error(
+        `Input pillarCode must be set when environmentName is set`
+      );
+    }
     const clientIdInput = core.getInput('clientId');
     const subscriptionIdInput = core.getInput('subscriptionId');
     const tenantIdInput = core.getInput('tenantId');
@@ -30,6 +31,7 @@ export async function run(): Promise<void> {
 
     const pulumiStateSubscriptionId =
       process.env.PULUMI_STATE_AZURE_SUBSCRIPTION_ID;
+
     if (!pulumiStateSubscriptionId) {
       throw new Error(`Pulumi State Subscription Id is not set in the runner`);
     }
